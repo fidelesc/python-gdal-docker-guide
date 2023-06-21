@@ -62,6 +62,41 @@ pip install numpy==1.21.5
 pip install opencv-python-headless==4.7.0.72
 ```
 
+#### Step 3.2: Setup Docker to get latest github code
+
+If you are using this Docker image to process using your own code, you can create a github repo with the code you want to use and do a git clone everytime the image is called.
+
+If you want to ensure that you're using the latest version of the repository every time a container is started, you would need to handle the git clone operation at runtime rather than at build time.
+
+One way to do this is to modify your startup command (CMD in the Dockerfile) or use an entrypoint script that performs the clone operation before starting your application. Here's an example of an entrypoint script:
+
+```
+#!/bin/sh
+
+# Clone the latest version of the repository
+git clone https://github.com/<username>/<repository>.git /app/<repository>
+
+# Run the application
+python /app/<repository>/run.py
+```
+
+And in your Dockerfile, you would COPY this script into the image and set it as the entrypoint:
+
+```
+FROM python:3.8-slim
+
+RUN apt-get update && \
+    apt-get install -y git && \
+    apt-get clean
+
+WORKDIR /app
+
+COPY entrypoint.sh /app
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+```
+
 ### Step 4: Create a Dockerfile
 
 For reproducibility across different architectures, we'll use a Dockerfile. Create a text file named "Dockerfile" and refer to the existing Dockerfile as an example.

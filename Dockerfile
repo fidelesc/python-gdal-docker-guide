@@ -12,3 +12,10 @@ COPY requirements.txt /app/
 
 # Install the necessary dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# If you want to use git to clone repos
+RUN apt-get install -y git && apt-get clean
+COPY entrypoint.sh /app
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
