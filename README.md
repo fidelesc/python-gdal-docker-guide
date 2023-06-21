@@ -116,6 +116,7 @@ To use your Docker image on AWS Fargate, you will first need to push your Docker
 
 Please refer to the official [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) for the most accurate and up-to-date information. The exact commands can vary depending on your specific system configuration.
 
+
 2. **Create a Repository in Amazon ECR**: Go to the ECR console on your AWS account and create a new repository.
 
 2.1 **Sign in to your AWS account**: Open your AWS Management Console and sign in. If you don't already have an AWS account, you'll need to create one and set up your billing information.
@@ -140,10 +141,37 @@ aws ecr get-login-password --region region | docker login --username AWS --passw
 ```
 Replace <region> with your AWS region, and <your-account-id> with your AWS account ID.
 
+If this is your first time using the AWS CLI it will request you AWS access key and Secret Access Key. You can configure your aws cli with:
+
+```
+aws configure
+```
+
+If you have an IAM Identity Center login:
+
+```
+aws configure sso
+SSO session name (Recommended): my-sso
+SSO start URL [None]: https://my-sso-portal.awsapps.com/start # You can get your URL at IAM Identity Center (AWS access portal URL)
+SSO region [None]: us-east-2 # your region
+SSO registration scopes [None]: sso:account:access
+```
+
+
+After setting up your sso connection you will be asked to name your profile, which you then use to authenticate your ecr connection:
+
+
+```
+aws ecr get-login-password --region <aws-region> --profile <my-sso-profile> | docker login --username AWS --password-stdin <account ID>.dkr.ecr.<aws-region>.amazonaws.com
+
+```
+
+You can find more information in the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html)
+
 4. **Tag your Docker Image**: You'll need to tag the Docker image using the URI of the ECR repository you created.
 
 ```
-docker tag geotiff:latest <your-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:tag
+docker tag geotiff:latest <your-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:<image tag>
 ```
 
 Replace <your-account-id> with your AWS account ID, <region> with your AWS region, <repository-name> with the name of your repository, and tag with your preferred tag name.
@@ -151,7 +179,7 @@ Replace <your-account-id> with your AWS account ID, <region> with your AWS regio
 5. **Push your Docker Image**: You can now push your Docker image to your ECR repository.
 
 ```
-docker push <your-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:tag
+docker push <your-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:<image tag>
 ```
 
 Once your image is in ECR, you can configure your task definition in AWS Fargate to use that image. In the task definition, you'll provide the URI of your image in ECR for the "Image" parameter.
